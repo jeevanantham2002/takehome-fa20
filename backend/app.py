@@ -50,19 +50,45 @@ def mirror(name):
     data = {"name": name}
     return create_response(data)
 
-@app.route("/restaurants", methods=['GET'])
-def get_all_restaurants():
-    return create_response({"restaurants": db.get('restaurants')})
-
 @app.route("/restaurants/<id>", methods=['DELETE'])
 def delete_restaurant(id):
     if db.getById('restaurants', int(id)) is None:
         return create_response(status=404, message="No restaurant with this id exists")
     db.deleteById('restaurants', int(id))
     return create_response(message="Restaurant deleted")
-
-
+    
 # TODO: Implement the rest of the API here!
+############################################################################
+#Newly added code by Jeevanantham Sundaram Murugan
+@app.route("/restaurants/<id>", methods=['GET'])
+def get_a_restaurant(id):
+  restaurant = db.getById('restaurants', int(id))
+  if restaurant is None:
+     return create_response(status=404, message="No restaurant with this id exists")
+  return create_response(restaurant)
+
+@app.route("/restaurants", methods=['GET'])
+def get_all_restaurants():
+  restaurants = db.get('restaurants')
+  filtered_restaurants =[];
+
+  if 'minRating' in request.args: 
+  #Checks if any arguments are minRating, if not just returns all the restaurants
+  #Added this functionality just incase you wanted to also test GET /restaurants and Get/restaurants?minRating=8
+    minRating = request.args.get('minRating')
+
+    for i in restaurants:
+     if(i["rating"]>= int(minRating)):
+      filtered_restaurants.append(db.getById('restaurants', i["id"]))
+
+    if len(filtered_restaurants) == 0:
+      return create_response(status=404, message="No restaurants with that ratings equal to or above the one requested exist")
+
+    return create_response({"restaurants": filtered_restaurants})
+  else:
+    return create_response({"restaurants": db.get('restaurants')})
+
+############################################################################
 
 """
 ~~~~~~~~~~~~ END API ~~~~~~~~~~~~
